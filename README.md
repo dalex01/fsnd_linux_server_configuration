@@ -11,7 +11,7 @@ Project was developed and reviewed according to this [rubric](http://i.imgur.com
 
 - Server IP: 52.34.190.50
 - SSH port: 2200
-- URL to application:
+- URL to application: [http://ec2-52-34-190-50.us-west-2.compute.amazonaws.com/](http://ec2-52-34-190-50.us-west-2.compute.amazonaws.com/)
 
 ## Software installed on server
 
@@ -27,6 +27,8 @@ Project was developed and reviewed according to this [rubric](http://i.imgur.com
 	- oauth2client
 	- psycopg2
 	- Flask-SeaSurf
+	- glances
+- fail2ban
 
 ## Configuration changes made
 
@@ -165,15 +167,78 @@ cd /var/www/html
 sudo mkdir app
 cd app
 sudo touch .htaccess | echo "$RedirectMatch 404 /\.git" >> .htaccess
-sudo mkdir app
-cd app
 git clone https://github.com/dalex01/fsnd_restaurants.git
 cd fsnd_restaurants
 sudo rm README.md
 sudo mv * ..
 cd ..
 sudo rm -rf fsnd_restaurants
+sudo nano /etc/apache2/sites-available/app.conf
+sudo service apache2 reload
+sudo a2ensite app
+sudo a2dissite 000-default.conf
+sudo mv run.py app.wsgi
+sudo nano app.wsgi
+sudo nano restaurants/models.py
+sudo nano restaurants/helpers.py
+sudo service apache2 restart
 ```
+
+The follwoing text should be entered into `/etc/apache2/sites-available/app.conf` file:
+```
+<VirtualHost *:80>
+                ServerName 52.34.190.50
+                ServerAdmin alexey.drozdov@gmail.com
+                WSGIScriptAlias / /var/www/app/app.wsgi
+                <Directory /var/www/app/restaurants/>
+                        Order allow,deny
+                        Allow from all
+                </Directory>
+                Alias /static /var/www/app/restaurants/static
+                <Directory /var/www/app/restaurants/static/>
+                        Order allow,deny
+                        Allow from all
+                </Directory>
+                Alias /images /var/www/app/restaurants/static/images
+                <Directory /var/www/catalog/catalog/uploads/>
+                       Order allow,deny
+                       Allow from all
+                </Directory>
+                ErrorLog ${APACHE_LOG_DIR}/error.log
+                LogLevel warn
+                CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+
+The follwoing code should be added into `app.wsgi` file (previous content can be removed):
+```
+#!/usr/bin/python
+import sys
+import logging
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0,"/var/www/app/")
+
+from restaurants import app as application
+
+application.secret_key = 'super_super_secret_key'
+```
+
+In `restaurants/models.py` and `restaurants/helpers.py` files path to db should be changed on `engine = create_engine("postgresql+psycopg2://catalog:catalog@localhost/restaurantsdb")`
+
+##### 13. Configure firewall to monitor for repeat unsuccessful login attempts
+```
+sudo apt-get install fail2ban
+sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+```
+
+We will use default configuration.
+
+##### 14. Application monitoring
+```
+sudo pip install glances
+```
+
+Glances package is installed to monitor server health. To see monitoring dashboard just run `glances` from console
 
 ## Third-party resources used of to complete this project
 
@@ -182,8 +247,12 @@ sudo rm -rf fsnd_restaurants
 - [Error message when I run sudo: unable to resolve host (none)](http://askubuntu.com/questions/59458/error-message-when-i-run-sudo-unable-to-resolve-host-none)
 - [Problem with restarting Apache2](http://askubuntu.com/questions/329323/problem-with-restarting-apache2)
 - [How To Secure PostgreSQL on an Ubuntu VPS](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps)
+- [How To Install and Use PostgreSQL on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-14-04)
+- [How To Deploy a Flask Application on an Ubuntu VPS](https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps)
 - [psql: FATAL: Peer authentication failed for user “dev”](http://stackoverflow.com/questions/17443379/psql-fatal-peer-authentication-failed-for-user-dev)
 - [Connect to PostgreSQL from the command line](https://www.a2hosting.com/kb/developer-corner/postgresql/connect-to-postgresql-from-the-command-line)
-- [How To Install and Use PostgreSQL on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-14-04)
+- [How do I change the root directory of an apache server?](http://stackoverflow.com/questions/5891802/how-do-i-change-the-root-directory-of-an-apache-server/23175981#23175981)
+- [Glances 2.5.1](https://pypi.python.org/pypi/Glances)
+- [How To Protect SSH with Fail2Ban on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04)
 
 All other instructions was taken from [Configuring Linux Web Servers](https://www.udacity.com/course/configuring-linux-web-servers--ud299) Udacity course.
