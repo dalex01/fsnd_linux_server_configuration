@@ -57,7 +57,10 @@ chgrp grader /home/grader/.ssh/authorized_keys
 chown grader /home/grader/.ssh/authorized_keys
 rm ~/.ssh/authorized_keys
 rmdir .ssh
+nano /etc/ssh/sshd_config
 ```
+
+During editing `/etc/ssh/sshd_config` line `PermitRootLogin without-password` should be changed on `PermitRootLogin no`
 
 Now we can access server by grader user via ssh with command (later, when we change ssh port, we will add `-p 2200` parameter to this command):
 ```
@@ -70,6 +73,8 @@ All further commands we will execute under grader user (using sudo before comman
 sudo apt-get update
 sudo apt-get upgrade
 ```
+
+Also information from this link [AutomaticSecurityUpdates](https://help.ubuntu.com/community/AutomaticSecurityUpdates) can be (but was not) applyed.
 
 ##### 5. Change the SSH port from 22 to 2200
 - in file `/etc/ssh/sshd_config` edit the line which states 'Port 22'
@@ -239,6 +244,11 @@ sudo pip install glances
 ```
 
 Glances package is installed to monitor server health. To see monitoring dashboard just run `glances` from console
+Also the following tools can be (but was not) used:
+[Munin](https://www.digitalocean.com/community/tutorials/how-to-install-munin-on-an-ubuntu-vps)
+[Nagios](https://www.digitalocean.com/community/tutorials/how-to-install-nagios-4-and-monitor-your-servers-on-ubuntu-14-04)
+[Apache mod_status](https://www.digitalocean.com/community/tutorials/how-to-install-configure-and-use-modules-in-the-apache-web-server) (check the Status Module section)
+[Monitorix](http://www.monitorix.org)
 
 ## Third-party resources used of to complete this project
 
@@ -254,5 +264,8 @@ Glances package is installed to monitor server health. To see monitoring dashboa
 - [How do I change the root directory of an apache server?](http://stackoverflow.com/questions/5891802/how-do-i-change-the-root-directory-of-an-apache-server/23175981#23175981)
 - [Glances 2.5.1](https://pypi.python.org/pypi/Glances)
 - [How To Protect SSH with Fail2Ban on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04)
+- [AutomaticSecurityUpdates](https://help.ubuntu.com/community/AutomaticSecurityUpdates)
+- [Uptime](https://en.wikipedia.org/wiki/Uptime)
+- [System_monitor](https://en.wikipedia.org/wiki/System_monitor)
 
 All other instructions was taken from [Configuring Linux Web Servers](https://www.udacity.com/course/configuring-linux-web-servers--ud299) Udacity course.
